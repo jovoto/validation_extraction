@@ -6,12 +6,13 @@ module ValidationExtraction
         case v.macro
         when :validates_presence_of, :validates_acceptance_of then
           add_validations(json, :rules, "required: true")
-          add_validations(json, :messages, "required: '#{v.options[:message]}'") if has_message?(v) 
+          #add_validations(json, :messages, "required: '#{v.options[:message]}'") if has_message?(v) 
+          add_validations(json, :messages, "required: 'required'") if has_message?(v) 
 
         # default action is check for remote, if controller implements check
         when :validates_uniqueness_of then
           if controller = (find_controller_to_model(object.class.to_s) || find_controller_to_model(object.class.to_s.pluralize))
-            if controller.method_defined?(:check)
+            if controller.method_defined?(:check) && object.new_record?
               add_validations(json, :rules, "remote: '#{template.url_for({:controller => controller.controller_path, :action => "check"})}'")
               add_validations(json, :messages, "remote: '#{v.options[:message]}'")  if has_message?(v)
             end
